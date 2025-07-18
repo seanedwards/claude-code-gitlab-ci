@@ -1,3 +1,14 @@
+# ⚠️ This is a Mirror Repository
+
+This repository is an automated mirror of the `base-action` directory from [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action).
+
+**Do not submit PRs or issues to this repository.** Instead, please contribute to the main repository:
+
+- 🐛 [Report issues](https://github.com/anthropics/claude-code-action/issues)
+- 🔧 [Submit pull requests](https://github.com/anthropics/claude-code-action/pulls)
+- 📖 [View documentation](https://github.com/anthropics/claude-code-action#readme)
+
+---
 # Claude Code Base Action
 
 This GitHub Action allows you to run [Claude Code](https://www.anthropic.com/claude-code) within your GitHub Actions workflows. You can use this to build any custom workflow on top of Claude Code.
