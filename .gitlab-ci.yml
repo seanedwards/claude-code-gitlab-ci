@@ -1,0 +1,91 @@
+# GitLab CI Template for Claude Code Integration
+# This is a template file that demonstrates how to use Claude Code in GitLab CI
+
+stages:
+  - claude
+
+# Default variables that can be overridden
+variables:
+  # Claude Code execution settings
+  CLAUDE_TIMEOUT_MINUTES: "10"
+  CLAUDE_ALLOWED_TOOLS: ""
+  CLAUDE_DISALLOWED_TOOLS: ""
+  CLAUDE_MAX_TURNS: ""
+  
+  # Provider settings (set one)
+  CLAUDE_USE_BEDROCK: "false"
+  CLAUDE_USE_VERTEX: "false"
+  
+  # Model configuration
+  CLAUDE_MODEL: ""
+  CLAUDE_FALLBACK_MODEL: ""
+  
+  # Advanced settings
+  CLAUDE_MCP_CONFIG: ""
+  CLAUDE_SETTINGS: ""
+  CLAUDE_SYSTEM_PROMPT: ""
+  CLAUDE_APPEND_SYSTEM_PROMPT: ""
+  CLAUDE_ENV: ""
+  
+  # Bun version to use
+  BUN_VERSION: "1.2.11"
+
+# Claude Code job template
+.claude_code_template:
+  stage: claude
+  image: ubuntu:22.04
+  
+  before_script:
+    # Install Node.js (required for Bun installation)
+    - apt-get update && apt-get install -y curl unzip
+    - curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    - apt-get install -y nodejs
+    
+    # Install Bun
+    - curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"
+    - export PATH="$HOME/.bun/bin:$PATH"
+    
+    # Install Claude Code
+    - curl -fsSL https://claude.ai/install.sh | bash -s 1.0.86
+    - export PATH="$HOME/.local/bin:$PATH"
+    
+    # Install dependencies for this action
+    - cd $CI_PROJECT_DIR && bun install
+  
+  script:
+    # Run Claude Code using our GitLab CI adapter
+    - export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+    - bun run $CI_PROJECT_DIR/gitlab/cli.ts
+  
+  artifacts:
+    paths:
+      - claude-execution-output.json
+    reports:
+      junit: claude-execution-output.json
+    expire_in: 1 hour
+    when: always
+  
+  variables:
+    # GitLab CI specific environment variables
+    GITLAB_CI_MODE: "1"
+    CLAUDE_WORKING_DIR: $CI_PROJECT_DIR
+    RUNNER_TEMP: $CI_PROJECT_DIR/.tmp
+
+# Example usage job
+claude_code_example:
+  extends: .claude_code_template
+  variables:
+    CLAUDE_PROMPT: "Analyze the codebase and suggest improvements"
+    CLAUDE_ALLOWED_TOOLS: "Read,Grep,Bash"
+  only:
+    - merge_requests
+    - main
+
+# Example with prompt file
+claude_code_with_file:
+  extends: .claude_code_template
+  variables:
+    CLAUDE_PROMPT_FILE: ".claude/prompt.md"
+    CLAUDE_ALLOWED_TOOLS: "Read,Write,Edit,Bash"
+  only:
+    - schedules
